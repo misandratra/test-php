@@ -53,7 +53,8 @@ Merci de nous avoir contacté pour votre livraison à [quote:destination_name].
 Bien cordialement,
 
 L'équipe de Shipper
-");
+"
+        );
         $templateManager = new TemplateManager();
 
         $message = $templateManager->getTemplateComputed(

@@ -1,73 +1,80 @@
 <?php
 
+declare(strict_types=1);
+
 class TemplateManager
 {
-    public function getTemplateComputed(Template $tpl, array $data)
-    {
-        if (!$tpl) {
-            throw new \RuntimeException('no tpl given');
-        }
+    private $quoteRepository;
+    private $siteRepository;
+    private $destinationRepository;
+    private $applicationContext;
 
-        $replaced = clone($tpl);
+    public function __construct(
+        QuoteRepository $quoteRepository,
+        SiteRepository $siteRepository,
+        DestinationRepository $destinationRepository,
+        ApplicationContext $applicationContext
+    ) {
+        $this->quoteRepository = $quoteRepository;
+        $this->siteRepository = $siteRepository;
+        $this->destinationRepository = $destinationRepository;
+        $this->applicationContext = $applicationContext;
+    }
+
+    public function getTemplateComputed(Template $tpl, array $data): Template
+    {
+        $replaced = clone $tpl;
         $replaced->subject = $this->computeText($replaced->subject, $data);
         $replaced->content = $this->computeText($replaced->content, $data);
 
         return $replaced;
     }
 
-    private function computeText($text, array $data)
+    private function computeText(string $text, array $data): string
     {
-        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
-
-        $quote = (isset($data['quote']) and $data['quote'] instanceof Quote) ? $data['quote'] : null;
-
-        if ($quote)
-        {
-            $_quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
-            $usefulObject = SiteRepository::getInstance()->getById($quote->siteId);
-            $destinationOfQuote = DestinationRepository::getInstance()->getById($quote->destinationId);
-
-            if(strpos($text, '[quote:destination_link]') !== false){
-                $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
-            }
-
-            $containsSummaryHtml = strpos($text, '[quote:summary_html]');
-            $containsSummary     = strpos($text, '[quote:summary]');
-
-            if ($containsSummaryHtml !== false || $containsSummary !== false) {
-                if ($containsSummaryHtml !== false) {
-                    $text = str_replace(
-                        '[quote:summary_html]',
-                        Quote::renderHtml($_quoteFromRepository),
-                        $text
-                    );
-                }
-                if ($containsSummary !== false) {
-                    $text = str_replace(
-                        '[quote:summary]',
-                        Quote::renderText($_quoteFromRepository),
-                        $text
-                    );
-                }
-            }
-
-            (strpos($text, '[quote:destination_name]') !== false) and $text = str_replace('[quote:destination_name]',$destinationOfQuote->countryName,$text);
+        $quote = $data['quote'] ?? null;
+        if ($quote instanceof Quote) {
+            $text = $this->replaceQuoteVariables($text, $quote);
         }
 
-        if (isset($destination))
-            $text = str_replace('[quote:destination_link]', $usefulObject->url . '/' . $destination->countryName . '/quote/' . $_quoteFromRepository->id, $text);
-        else
-            $text = str_replace('[quote:destination_link]', '', $text);
-
-        /*
-         * USER
-         * [user:*]
-         */
-        $_user  = (isset($data['user'])  and ($data['user']  instanceof User))  ? $data['user']  : $APPLICATION_CONTEXT->getCurrentUser();
-        if($_user) {
-            (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]'       , ucfirst(mb_strtolower($_user->firstname)), $text);
+        $user = $data['user'] ?? $this->applicationContext->getCurrentUser();
+        if ($user instanceof User) {
+            $text = $this->replaceUserVariables($text, $user);
         }
 
         return $text;
+    }
+
+    private function replaceQuoteVariables(string $text, Quote $quote): string
+    {
+        $quoteFromRepository = $this->quoteRepository->getById($quote->id);
+        $site = $this->siteRepository->getById($quote->siteId);
+        $destination = $this->destinationRepository->getById($quote->destinationId);
+
+        $replacements = [
+            '[quote:destination_name]' => $destination->countryName,
+            '[quote:destination_link]' => $this->getDestinationLink($site, $destination, $quoteFromRepository),
+            '[quote:summary_html]' => Quote::renderHtml($quoteFromRepository),
+            '[quote:summary]' => Quote::renderText($quoteFromRepository),
+        ];
+
+        return strtr($text, $replacements);
+    }
+
+    private function replaceUserVariables(string $text, User $user): string
+    {
+        $replacements = [
+            '[user:first_name]' => ucfirst(mb_strtolower($user->firstname)),
+        ];
+
+        return strtr($text, $replacements);
+    }
+
+    private function getDestinationLink(?Site $site, ?Destination $destination, Quote $quote): string
+    {
+        if ($site && $destination) {
+            return "{$site->url}/{$destination->countryName}/quote/{$quote->id}";
+        }
+        return '';
     }
 }
