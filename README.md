@@ -26,5 +26,7 @@ D'autres commandes sont disponibles :
 | make remove-image | Suppression de l'image docker |
 | make reset | Suppression Container et Image |
 | make composer-install | lance un composer install dans le container |
-Le document [$${\color{blue}Refacto-Test-Kata.docx}$$](https://github.com/misandratra/test-php/blob/main/Refacto-Test-Kata.docx) résume la liste des modifications et refacto effectués sur le projet. 
+
+> [!NOTE]  
+> Le document [Refacto-Test-Kata.docx](https://github.com/misandratra/test-php/blob/main/Refacto-Test-Kata.docx) résume la liste des modifications et refacto effectués sur le projet. 
 
