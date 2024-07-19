@@ -2,18 +2,15 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\TestCase;
 use Faker\Factory;
-use App\Entity\User;
 use App\Entity\Quote;
 use App\Entity\Template;
 use App\TemplateManager;
-use App\Entity\Destination;
-use PHPUnit\Framework\TestCase;
 use App\Repository\SiteRepository;
 use App\Context\ApplicationContext;
 use App\Repository\QuoteRepository;
 use App\Repository\DestinationRepository;
-use PHPUnit\Framework\MockObject\MockObject;
 
 class TemplateManagerTest extends TestCase
 {
@@ -24,21 +21,15 @@ class TemplateManagerTest extends TestCase
     protected function setUp(): void
     {
         $this->faker = Factory::create();
-        $this->destinationRepository = $this->createMock(DestinationRepository::class);
-        $this->applicationContext = $this->createMock(ApplicationContext::class);
+        $this->destinationRepository = new DestinationRepository();
+        $this->applicationContext = new ApplicationContext();
     }
 
     public function testTemplateComputation(): void
     {
         $destinationId = $this->faker->randomNumber();
-        $expectedDestination = $this->createMock(Destination::class);
-        $expectedDestination->method('getCountryName')->willReturn('France');
-
-        $expectedUser = $this->createMock(User::class);
-        $expectedUser->firstname = 'John';
-
-        $this->destinationRepository->method('getById')->with($destinationId)->willReturn($expectedDestination);
-        $this->applicationContext->method('getCurrentUser')->willReturn($expectedUser);
+        $expectedDestination = $this->destinationRepository->getById($destinationId);
+        $expectedUser = $this->applicationContext->getCurrentUser();
 
         $quote = new Quote(
             $this->faker->randomNumber(),
@@ -61,30 +52,35 @@ L'équipe de Shipper
 "
         );
 
-        /** @var QuoteRepository&\PHPUnit\Framework\MockObject\MockObject */
-        $quoteRepository = $this->createMock(QuoteRepository::class);
-
-        /** @var SiteRepository&\PHPUnit\Framework\MockObject\MockObject */
-        $siteRepository = $this->createMock(SiteRepository::class);
-
         $templateManager = new TemplateManager(
-            $quoteRepository,
-            $siteRepository,
+            new QuoteRepository(),
+            new SiteRepository(),
             $this->destinationRepository,
             $this->applicationContext
         );
 
-        $message = $templateManager->getTemplateComputed($template, ['quote' => $quote]);
+        $message = $templateManager->getTemplateComputed(
+            $template,
+            [
+                'quote' => $quote
+            ]
+        );
 
-        $this->assertEquals('Votre livraison à France', $message->getSubject());
-        $this->assertEquals("
-Bonjour John,
+        $this->assertEquals(
+            'Votre livraison à ' . $expectedDestination->getCountryName(),
+            $message->getSubject()
+        );
+        $this->assertEquals(
+            "
+Bonjour " . $expectedUser->getFirstname() . ",
 
-Merci de nous avoir contacté pour votre livraison à France.
+Merci de nous avoir contacté pour votre livraison à " . $expectedDestination->getCountryName() . ".
 
 Bien cordialement,
 
 L'équipe de Shipper
-", $message->getContent());
+",
+            $message->getContent()
+        );
     }
 }
