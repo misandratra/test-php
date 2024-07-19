@@ -39,7 +39,7 @@ RUN curl -sSL https://phar.phpunit.de/phpunit.phar -o /usr/local/bin/phpunit \
 RUN sed -i 's/80/8081/' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
 # Exécution de la commande composer install
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Exposition du port 8081 pour accéder à l'application depuis l'extérieur du conteneur
 EXPOSE 8081

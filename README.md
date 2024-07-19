@@ -1,37 +1,30 @@
-# test-php
-Refactoring kata
+# Refactoring Kata Test
+### _Hervé ---  Test technique "Les Echos Le Parisien Services"_
 
-*********************************************************************************************
+ * Pour lancer le projet les commandes suivantes sont à executer dans l'ordre via le terminal en se positionnant à la racine du projet
 
-* Pour lancer le projet les commandes suivantes sont à executer dans le terminal en se positionnant à la racine du projet 
-
-Si vous avez make installé sur le poste de travail :
-
-    "make build"
-
-    "make run"
-
-Sinon il faut executer les commandes docker pour le build et run dans le terminal :
-
-    "sudo docker build -t php_test_refacto_kata ."
-
-    "sudo docker run --name php_test_container -p 8081:8081 -d php_test_refacto_kata"
-
-
-Autres cmd make disponibles pour la suppressio du container et suppression de l'image :
-
-    "make stop-remove"
-	
-    "make remove-image"
-
-
-* Une fois les commandes lancées l'application est accssible depuis l'adresse : 
-
-    http://localhost:8081/example/example.php
-    
-
-*********************************************************************************************
-
-* Résumé des modifications effectués lors de la réfacto : cf. document "Refacto.docx"
-
+Si vous avez Make installé sur le poste de travail :
+```sh
+make build
+make run
+```
+Sinon il faudra executer les commandes docker pour le build et run dans le terminal :
+```sh
+sudo docker build -t php_test_refacto_kata .
+sudo docker run --name php_test_container -p 8081:8081 -d php_test_refacto_kata
+```
+Une fois les commandes lancées l'application est accessible dans le navigateur depuis l'adresse ci-dessous :
+([application](http://localhost:8081/example/example.php))
+```sh
+http://localhost:8081/example/example.php
+```
+D'autres commandes sont disponibles : 
+| Commande | Description |
+| ------ | ------ |
+| make run-test | Lancement des tests |
+| make stop-remove | Arrêt et suppression des containers |
+| make remove-image | Suppression de l'image docker |
+| make reset | Suppression Container et Image |
+| make composer-install | lance un composer install dans le container |
+> Note: Le document [$${\color{blue}Refacto-Test-Kata.docx}$$](https://github.com/misandratra/test-php/blob/main/Refacto.docx) résume la liste des modifications et refacto effectués sur le projet. 
 
