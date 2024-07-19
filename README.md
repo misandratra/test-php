@@ -1,7 +1,7 @@
 # Refactoring Kata Test
 ### _Hervé ---  Test technique "Les Echos Le Parisien Services"_
 
- * Pour lancer le projet les commandes suivantes sont à executer dans l'ordre via le terminal en se positionnant à la racine du projet
+ * Pour lancer le projet les commandes suivantes sont à executer dans l'ordre via le terminal en se positionnant à la racine du projet (dans le répertoire où se trouve le Dockerfile)
 
 Si vous avez Make installé sur le poste de travail :
 ```sh
