@@ -1,13 +1,12 @@
 <?php
 
-use Faker\Factory;
+namespace App\Repository;
+
+use App\Entity\Site;
+use App\Repository\Repository;
 
 class SiteRepository implements Repository
 {
-    use SingletonTrait;
-
-    private $url;
-
     /**
      * @param int $id
      *
@@ -16,7 +15,7 @@ class SiteRepository implements Repository
     public function getById($id)
     {
         // DO NOT MODIFY THIS METHOD
-        $generator = Faker\Factory::create();
+        $generator = \Faker\Factory::create();
         $generator->seed($id);
 
         return new Site($id, $generator->url);
