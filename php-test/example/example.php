@@ -1,21 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../src/Entity/Destination.php';
-require_once __DIR__ . '/../src/Entity/Quote.php';
-require_once __DIR__ . '/../src/Entity/Site.php';
-require_once __DIR__ . '/../src/Entity/Template.php';
-require_once __DIR__ . '/../src/Entity/User.php';
-require_once __DIR__ . '/../src/Helper/SingletonTrait.php';
-require_once __DIR__ . '/../src/Context/ApplicationContext.php';
-require_once __DIR__ . '/../src/Repository/Repository.php';
-require_once __DIR__ . '/../src/Repository/DestinationRepository.php';
-require_once __DIR__ . '/../src/Repository/QuoteRepository.php';
-require_once __DIR__ . '/../src/Repository/SiteRepository.php';
-require_once __DIR__ . '/../src/TemplateManager.php';
+use Faker\Factory;
+use App\Entity\Quote;
+use App\Entity\Template;
+use App\TemplateManager;
+use App\Repository\SiteRepository;
+use App\Context\ApplicationContext;
+use App\Repository\QuoteRepository;
+use App\Repository\DestinationRepository;
 
-$faker = \Faker\Factory::create();
+$faker = Factory::create();
 
 $template = new Template(
     1,
@@ -28,14 +26,23 @@ Merci de nous avoir contacté pour votre livraison à [quote:destination_name].
 Bien cordialement,
 
 L'équipe de Shipper
-");
-$templateManager = new TemplateManager();
-
-$message = $templateManager->getTemplateComputed(
-    $template,
-    [
-        'quote' => new Quote($faker->randomNumber(), $faker->randomNumber(), $faker->randomNumber(), $faker->date())
-    ]
+"
 );
 
-echo $message->subject . "\n" . $message->content;
+$templateManager = new TemplateManager(
+    new QuoteRepository(),
+    new SiteRepository(),
+    new DestinationRepository(),
+    new ApplicationContext()
+);
+
+$quote = new Quote(
+    $faker->randomNumber(),
+    $faker->randomNumber(),
+    $faker->randomNumber(),
+    new DateTime($faker->date())
+);
+
+$message = $templateManager->getTemplateComputed($template, ['quote' => $quote]);
+
+echo $message->getSubject() . "\n" . $message->getContent();

@@ -1,6 +1,18 @@
 <?php
 
-declare(strict_types=1);
+namespace App;
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+use App\Entity\Site;
+use App\Entity\User;
+use App\Entity\Quote;
+use App\Entity\Template;
+use App\Entity\Destination;
+use App\Repository\SiteRepository;
+use App\Context\ApplicationContext;
+use App\Repository\QuoteRepository;
+use App\Repository\DestinationRepository;
 
 class TemplateManager
 {
@@ -24,8 +36,8 @@ class TemplateManager
     public function getTemplateComputed(Template $tpl, array $data): Template
     {
         $replaced = clone $tpl;
-        $replaced->subject = $this->computeText($replaced->subject, $data);
-        $replaced->content = $this->computeText($replaced->content, $data);
+        $replaced->setSubject($this->computeText($replaced->getSubject(), $data));
+        $replaced->setContent($this->computeText($replaced->getContent(), $data));
 
         return $replaced;
     }
@@ -47,15 +59,15 @@ class TemplateManager
 
     private function replaceQuoteVariables(string $text, Quote $quote): string
     {
-        $quoteFromRepository = $this->quoteRepository->getById($quote->id);
-        $site = $this->siteRepository->getById($quote->siteId);
-        $destination = $this->destinationRepository->getById($quote->destinationId);
+        $quoteFromRepository = $this->quoteRepository->getById($quote->getId());
+        $site = $this->siteRepository->getById($quote->getSiteId());
+        $destination = $this->destinationRepository->getById($quote->getDestinationId());
 
         $replacements = [
-            '[quote:destination_name]' => $destination->countryName,
-            '[quote:destination_link]' => $this->getDestinationLink($site, $destination, $quoteFromRepository),
-            '[quote:summary_html]' => Quote::renderHtml($quoteFromRepository),
-            '[quote:summary]' => Quote::renderText($quoteFromRepository),
+            '[quote:destination_name]' => $destination ? $destination->getCountryName() : '',
+            '[quote:destination_link]' => $quoteFromRepository ? $this->getDestinationLink($site, $destination, $quoteFromRepository) : '',
+            '[quote:summary_html]' => $quoteFromRepository ? Quote::renderHtml($quoteFromRepository) : '',
+            '[quote:summary]' => $quoteFromRepository ? Quote::renderText($quoteFromRepository) : '',
         ];
 
         return strtr($text, $replacements);
@@ -64,16 +76,16 @@ class TemplateManager
     private function replaceUserVariables(string $text, User $user): string
     {
         $replacements = [
-            '[user:first_name]' => ucfirst(mb_strtolower($user->firstname)),
+            '[user:first_name]' => ucfirst(mb_strtolower($user->getFirstname())),
         ];
 
         return strtr($text, $replacements);
     }
 
-    private function getDestinationLink(?Site $site, ?Destination $destination, Quote $quote): string
+    private function getDestinationLink(?Site $site, ?Destination $destination, ?Quote $quote): string
     {
         if ($site && $destination) {
-            return "{$site->url}/{$destination->countryName}/quote/{$quote->id}";
+            return "{$site->getUrl()}/{$destination->getCountryName()}/quote/{$quote->getId()}";
         }
         return '';
     }
